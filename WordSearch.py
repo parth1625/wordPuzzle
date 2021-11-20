@@ -1,115 +1,137 @@
-# f = open("puzzle1.pzl",'r')
-f = open("puzzle2.pzl",'r')
-# puzzle = f.readlines()
-puzzle = f.read().split("\n")
-# print(puzzle)
+import sys
 
-## Get Grid lines and Words to find 
-gridlines = []
-words = []
-newline = False
-for p in puzzle:
-    if p == '':
-        newline = True
-        continue
-    if newline == False:
-        gridlines.append(p)
-    if newline == True:
-        words.append(p)
-print(gridlines,words)
+def writeFile(get_result):
+    f = open(fname.split(".")[0]+".out","a+")
+    if get_result[0] in duplicate:
+        return "Duplicate"
+    duplicate.append(get_result[0])
+    f.write(" ".join(get_result))
+    f.write("\n")
+    f.close()
 
-## Find if Rows and Columns are same.
-for grid in gridlines:
-    if len(gridlines) != len(grid):
-        print("Grid in not valid!")
-    total_row = len(gridlines)
-    total_col = len(grid)
-# print(total_row,total_col)
-
-newArray = []
-
-for grid in gridlines:
-    newArray.append(list(grid))
-
-def rightWord(word,row,a,b=1):
-    if b<len(word) and a<=total_col and word[b] == newArray[row][a+1]:
-        # print("Matched {}".format(word[b]))
-        rightWord(word,row,a+1,b+1)
-        if b>=len(word):
+def rightWord(word,row,a,start,b=1):
+    if b<len(word) and a+1<=total_col and word[b] == newArray[row][a+1]:
+        if b+1>=len(word):
+            # print(word,(row+1,start),(row+1,start+b))
+            writeFile([word,str((row+1,start)),str((row+1,start+b))])
             return True
+        rightWord(word,row,a+1,start,b+1)
     else:
-        # print("Not matched")
-        return False 
+        return "not found"
+    return True
 
-def downWord(word,col,a,b=1):
+def downWord(word,col,a,start,b=1):
     if b<len(word) and a+1<=total_row and word[b] == newArray[a+1][col]:
-        # print("Matched {}".format(word[b]))
-        downWord(word,col,a+1,b+1)
+        if b+1>=len(word):
+            # print(word,(start,col+1),(start+b,col+1))
+            writeFile([word,str((start,col+1)),str((start+b,col+1))])
+            return True
+        downWord(word,col,a+1,start,b+1)
     else:
-        # print("Not matched")
-        return False
+        return "not found"
     return True
 
-def leftWord(word,row,a,b=1):
+def leftWord(word,row,a,start,b=1):
     if b<len(word) and a-1>=0 and word[b]==newArray[row][a-1]:
-        leftWord(word,row,a-1,b+1)
+        if b+1>=len(word):
+            # print(word,(row+1,start),(row+1,start-b))
+            writeFile([word,str((row+1,start)),str((row+1,start-b))])
+            return True
+        leftWord(word,row,a-1,start,b+1)
     else:
-        return False
+        return "not found"
     return True
 
-def upWord(word,col,a,b=1):
+def upWord(word,col,a,start,b=1):
     if b<len(word) and a-1>=0 and word[b]==newArray[a-1][col]:
-        upWord(word,col,a-1,b+1)
+        if b+1>=len(word):
+            # print(word,(start,col+1),(start-b,col+1))
+            writeFile([word,str((start,col+1)),str((start-b,col+1))])
+            return True
+        upWord(word,col,a-1,start,b+1)
     else:
-        return False
+        return "not found"
     return True
 
 def matchAllWords(word,row,col):
-    # print(newArray[row][col],row+1,col+1)
-    if (row-1)>=0 and word[1] == newArray[row-1][col]:
-        # print("Letter {} matched".format(word[1]), "Up")
-        result = upWord(word,col,row)
-        if result == True:
+    if (row-1)>=0 and word[1] == newArray[row-1][col]: #Up
+        res = upWord(word,col,row,start=row+1)
+        if res == True:
             return True
         else:
-            return False
-    elif (col-1)>=0 and word[1] == newArray[row][col-1]:
-        # print("Letter {} matched".format(word[1]), "Left")
-        result = leftWord(word,row,col)
-        if result == True:
+            return "not found"
+    elif (col-1)>=0 and word[1] == newArray[row][col-1]: #Left
+        res = leftWord(word,row,col,start=col+1)
+        if res == True:
             return True
         else:
-            return False
-    elif row+1<total_row and word[1] == newArray[row+1][col]:
-        # print("Letter {} matched".format(word[1]), "Down")
-        result = downWord(word,col,row)
-        if result == True:
+            return "not found"
+    elif row+1<total_row and word[1] == newArray[row+1][col]: #Down
+        res = downWord(word,col,row,start=row+1)
+        if res == True:
             return True
         else:
-            return False
-    elif col+1<total_col and word[1] == newArray[row][col+1]:
-        # print("Letter {} matched".format(word[1]), "Right")
-        result = rightWord(word,row,col)
-        if result == True:
+            return "not found"
+    elif col+1<total_col and word[1] == newArray[row][col+1]: #Right
+        res = rightWord(word,row,col,start=col+1)
+        if res == True:
             return True
         else:
-            return False
+            return "not found"
     else:
         return False
 
-## Check String horizontally.
-for word in words:
-    for i in range(len(list(word))):
-        row = 0
-        for grid in gridlines:
-            col = 0
-            for j in range(len(list(gridlines))):
-                if word[i] == grid[j]:
-                    # print(row,col)
-                    start = [row+1,col+1]
-                    result = matchAllWords(word,row,col)
-                    if result == True:
-                        print(word,start)
-                        break
-                col += 1
-            row += 1
+def main(filename):
+    global newArray,total_col,total_row,fname,duplicate
+    fname = filename
+    f = open(fname,'r')
+    puzzle = f.read().split("\n")
+    f.close()
+    gridlines,words,duplicate = [],[],[]
+    newline = False
+    for p in puzzle:
+        if p == '':
+            newline = True
+            continue
+        if newline == False:
+            gridlines.append(p)
+        if newline == True:
+            words.append(p)
+
+    for grid in gridlines:
+        if len(gridlines) != len(grid):
+            print("Grid is not valid!")
+        total_row = len(gridlines)
+        total_col = len(grid)
+
+    newArray = []
+    for grid in gridlines:
+        newArray.append(list(grid))
+
+    for word in words:
+        result = False
+        for i in range(len(list(word))):
+            row = 0
+            for grid in gridlines:
+                col = 0
+                for j in range(len(list(gridlines))):
+                    if word[i] == grid[j]:
+                        final = matchAllWords(word,row,col)
+                        if final == True:
+                            result = True
+                            # print(word,start)
+                            break
+                    col += 1
+                row += 1
+        if result == False:
+            # print(word, "not found")
+            writeFile([word, "not found"])
+
+if __name__== '__main__':
+    if len(sys.argv) < 2:
+        print("No input file is given")
+        sys.exit()
+    if sys.argv:
+        f = open(sys.argv[1].split(".")[0]+".out",'w')
+        f.close()
+        main(sys.argv[1])
